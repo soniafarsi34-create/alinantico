@@ -2,168 +2,696 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<title>Antiquarium ULTRA AI — Sonia</title>
 
-<title>alinantico Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
+:root{
+ --bg:#05070c;
+ --card:#0d1119;
+ --gold:#d4af37;
+ --txt:#eee;
+}
 
 body{
-  font-family: Arial;
-  background:#f4f4f4;
-  padding:20px;
+ margin:0;
+ background:var(--bg);
+ color:var(--txt);
+ font-family:Inter,sans-serif;
 }
 
-h1{text-align:center;}
-
-.box{
-  background:white;
-  padding:20px;
-  margin:15px 0;
-  border-radius:10px;
+header{
+ background:#0a0e15;
+ padding:18px 25px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ border-bottom:1px solid #1b1f2a;
 }
 
-select,input{
-  padding:6px;
-  margin:5px;
+header h2{color:var(--gold)}
+
+nav{
+ flex-wrap:wrap;
+}
+
+nav a{
+ color:var(--txt);
+ margin:5px 12px;
+ cursor:pointer;
+ font-size:13px;
+ display:inline-block;
+}
+
+nav a:hover{color:var(--gold)}
+
+.container{
+ max-width:1600px;
+ margin:auto;
+ padding:25px;
+}
+
+.page{display:none}
+.page.active{display:block}
+
+.card{
+ background:var(--card);
+ border-radius:18px;
+ padding:22px;
+ margin-bottom:22px;
+ border:1px solid #1b1f2a;
+}
+
+h3{color:var(--gold)}
+
+input,select{
+ width:100%;
+ background:#080b12;
+ border:1px solid #222;
+ color:var(--txt);
+ padding:10px;
+ border-radius:8px;
+ margin:6px 0;
 }
 
 button{
-  padding:8px 15px;
-  background:#333;
-  color:white;
-  border:none;
-  border-radius:5px;
+ background:var(--gold);
+ color:black;
+ border:none;
+ padding:10px 18px;
+ border-radius:10px;
+ font-weight:700;
+ cursor:pointer;
+ margin:4px;
 }
 
+table{
+ width:100%;
+ border-collapse:collapse;
+ font-size:14px;
+}
+
+th,td{
+ padding:7px;
+ border-bottom:1px solid #222;
+}
+
+th{color:var(--gold)}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+ gap:15px;
+}
+
+.kpi{
+ background:#080b12;
+ border:1px solid #222;
+ border-radius:12px;
+ padding:12px;
+ text-align:center;
+}
+
+.kpi b{color:var(--gold);font-size:20px}
+
+.chat{
+ height:200px;
+ overflow:auto;
+ background:#080b12;
+ border:1px solid #222;
+ border-radius:12px;
+ padding:10px;
+}
+
+.user{color:var(--gold)}
+.ai{color:#fff}
 </style>
 </head>
 
 <body>
 
-<h1>📊 alinantico Analytics</h1>
+<header>
+<h2>ANTIQUARIUM · ULTRA AI</h2>
 
-<div class="box">
+<nav>
+<a onclick="go('dashboard')">Dashboard</a>
+<a onclick="go('sales')">Vendite</a>
+<a onclick="go('buys')">Acquisti</a>
+<a onclick="go('stock')">Magazzino</a>
+<a onclick="go('analytics')">Analisi</a>
+<a onclick="go('forecast')">Previsioni</a>
+<a onclick="go('search')">Ricerca</a>
+<a onclick="go('import')">Import</a>
+<a onclick="go('ai')">AI</a>
+<a onclick="go('backup')">Backup</a>
+</nav>
+</header>
 
-<input type="file" id="fileInput">
+<div class="container">
 
-<br><br>
+<!-- DASHBOARD -->
+<div id="dashboard" class="page active">
 
-<label>X (Categoria):</label>
-<select id="xSelect"></select>
+<div class="card">
+<h3>📊 KPI Business</h3>
+<div class="grid" id="kpi"></div>
+</div>
 
-<label>Y (Valore):</label>
-<select id="ySelect"></select>
+<div class="card">
+<canvas id="chartRevenue"></canvas>
+</div>
 
-<label>Grafico:</label>
-<select id="typeSelect">
-  <option value="bar">Barre</option>
-  <option value="line">Linea</option>
-  <option value="pie">Torta</option>
-  <option value="doughnut">Ciambella</option>
-</select>
-
-<button onclick="genera()">Genera</button>
+<div class="card">
+<canvas id="chartCash"></canvas>
+</div>
 
 </div>
 
-<div class="box">
-<canvas id="grafico"></canvas>
+<!-- SALES -->
+<div id="sales" class="page">
+
+<div class="card">
+<h3>➕ Vendita</h3>
+
+<input id="s_name" placeholder="Oggetto">
+<input id="s_cat" placeholder="Categoria">
+<input id="s_price" placeholder="Prezzo">
+<input id="s_cost" placeholder="Costo">
+<input id="s_date" type="date">
+
+<button onclick="addSale()">Salva</button>
+
+</div>
+
+<div class="card">
+<table id="salesTable"></table>
+</div>
+
+</div>
+
+<!-- BUYS -->
+<div id="buys" class="page">
+
+<div class="card">
+<h3>➕ Acquisto</h3>
+
+<input id="b_name">
+<input id="b_cat" placeholder="Categoria">
+<input id="b_price">
+<input id="b_date" type="date">
+
+<button onclick="addBuy()">Salva</button>
+
+</div>
+
+<div class="card">
+<table id="buysTable"></table>
+</div>
+
+</div>
+
+<!-- STOCK -->
+<div id="stock" class="page">
+
+<div class="card">
+<h3>📦 Magazzino + Rotazione</h3>
+<table id="stockTable"></table>
+</div>
+
+</div>
+
+<!-- ANALYTICS -->
+<div id="analytics" class="page">
+
+<div class="card">
+<canvas id="chartProfit"></canvas>
+</div>
+
+<div class="card">
+<canvas id="chartROI"></canvas>
+</div>
+
+<div class="card">
+<canvas id="chartCategory"></canvas>
+</div>
+
+</div>
+
+<!-- FORECAST -->
+<div id="forecast" class="page">
+
+<div class="card">
+<h3>🔮 Previsioni Avanzate</h3>
+
+<button onclick="makeForecast()">Calcola</button>
+
+<div id="forecastRes"></div>
+
+</div>
+
+</div>
+
+<!-- SEARCH -->
+<div id="search" class="page">
+
+<div class="card">
+<h3>🔍 Ricerca Oggetti</h3>
+
+<input id="searchTxt" placeholder="Cerca nome...">
+
+<button onclick="searchItem()">Cerca</button>
+
+<div id="searchRes"></div>
+
+<hr>
+
+<h3>📸 Ricerca per Immagine (Google Lens)</h3>
+
+<input type="file" id="imgFile">
+
+<button onclick="lens()">Cerca Online</button>
+
+</div>
+
+</div>
+
+<!-- IMPORT -->
+<div id="import" class="page">
+
+<div class="card">
+
+<h3>📂 Import CSV</h3>
+
+<input type="file" id="fileInput" accept=".csv">
+
+<button onclick="importFile()">Analizza</button>
+
+<div id="importRes"></div>
+
+</div>
+
+</div>
+
+<!-- AI -->
+<div id="ai" class="page">
+
+<div class="card">
+
+<h3>🤖 AI Advisor</h3>
+
+<div class="chat" id="chat"></div>
+
+<input id="q">
+
+<button onclick="ask()">Invia</button>
+
+</div>
+
+</div>
+
+<!-- BACKUP -->
+<div id="backup" class="page">
+
+<div class="card">
+
+<h3>💾 Backup</h3>
+
+<button onclick="exportData()">Scarica</button>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-let dati=[];
-let chart=null;
+/* DB */
 
-document.getElementById("fileInput").addEventListener("change",loadFile);
+let sales=JSON.parse(localStorage.getItem("sales")||"[]");
+let buys=JSON.parse(localStorage.getItem("buys")||"[]");
 
-function loadFile(e){
+let chartRevenue,chartCash,chartProfit,chartROI,chartCategory;
 
-const file=e.target.files[0];
-const reader=new FileReader();
+/* NAV */
 
-reader.onload=function(x){
-
-const data=new Uint8Array(x.target.result);
-const wb=XLSX.read(data,{type:"array"});
-const sh=wb.Sheets[wb.SheetNames[0]];
-dati=XLSX.utils.sheet_to_json(sh);
-
-preparaSelect();
-
-};
-
-reader.readAsArrayBuffer(file);
+function go(p){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ document.getElementById(p).classList.add("active");
 }
 
-function preparaSelect(){
+/* SAVE */
 
-const cols=Object.keys(dati[0]);
-
-let x=document.getElementById("xSelect");
-let y=document.getElementById("ySelect");
-
-x.innerHTML="";
-y.innerHTML="";
-
-cols.forEach(c=>{
-
-let o1=document.createElement("option");
-o1.value=c;
-o1.text=c;
-
-let o2=o1.cloneNode(true);
-
-x.appendChild(o1);
-y.appendChild(o2);
-
-});
+function save(){
+ localStorage.setItem("sales",JSON.stringify(sales));
+ localStorage.setItem("buys",JSON.stringify(buys));
 }
 
-function genera(){
+/* ADD */
 
-let xCol=xSelect.value;
-let yCol=ySelect.value;
-let tipo=typeSelect.value;
+function addSale(){
 
-let map={};
+ if(!s_name.value||!s_price.value)return;
 
-dati.forEach(r=>{
+ sales.push({
+  name:s_name.value,
+  cat:s_cat.value,
+  price:+s_price.value,
+  cost:+s_cost.value,
+  date:s_date.value
+ });
 
-let k=r[xCol];
-let v=Number(r[yCol]);
-
-if(!k || !v)return;
-
-map[k]=(map[k]||0)+v;
-
-});
-
-let labels=Object.keys(map);
-let values=Object.values(map);
-
-if(chart)chart.destroy();
-
-chart=new Chart(
-document.getElementById("grafico"),
-{
-type:tipo,
-data:{
-labels:labels,
-datasets:[{
-data:values,
-backgroundColor:[
-"#4CAF50","#2196F3","#FF9800",
-"#E91E63","#9C27B0","#00BCD4"
-]
-}]
-},
-options:{responsive:true}
-});
+ save(); clear(); render();
 }
+
+function addBuy(){
+
+ if(!b_name.value||!b_price.value)return;
+
+ buys.push({
+  name:b_name.value,
+  cat:b_cat.value,
+  price:+b_price.value,
+  date:b_date.value
+ });
+
+ save(); clear(); render();
+}
+
+function clear(){
+
+ s_name.value="";
+ s_cat.value="";
+ s_price.value="";
+ s_cost.value="";
+ s_date.value="";
+
+ b_name.value="";
+ b_cat.value="";
+ b_price.value="";
+ b_date.value="";
+}
+
+/* RENDER */
+
+function render(){
+
+ renderSales();
+ renderBuys();
+ renderStock();
+ renderKPI();
+ renderCharts();
+ renderAI();
+}
+
+function renderSales(){
+
+ let h="<tr><th>Nome</th><th>Cat</th><th>Prezzo</th><th>Costo</th><th>Profitto</th></tr>";
+
+ sales.forEach(s=>{
+  h+=`
+  <tr>
+  <td>${s.name}</td>
+  <td>${s.cat}</td>
+  <td>${s.price}</td>
+  <td>${s.cost}</td>
+  <td>${s.price-s.cost}</td>
+  </tr>`;
+ });
+
+ salesTable.innerHTML=h;
+}
+
+function renderBuys(){
+
+ let h="<tr><th>Nome</th><th>Cat</th><th>Prezzo</th></tr>";
+
+ buys.forEach(b=>{
+  h+=`
+  <tr>
+  <td>${b.name}</td>
+  <td>${b.cat}</td>
+  <td>${b.price}</td>
+  </tr>`;
+ });
+
+ buysTable.innerHTML=h;
+}
+
+function renderStock(){
+
+ let sold=sales.map(x=>x.name);
+
+ let h="<tr><th>Nome</th><th>Cat</th><th>Costo</th><th>Stato</th></tr>";
+
+ buys.forEach(b=>{
+
+  let st=sold.includes(b.name)?"Venduto":"Stock";
+
+  h+=`
+  <tr>
+  <td>${b.name}</td>
+  <td>${b.cat}</td>
+  <td>${b.price}</td>
+  <td>${st}</td>
+  </tr>`;
+ });
+
+ stockTable.innerHTML=h;
+}
+
+/* KPI */
+
+function renderKPI(){
+
+ let rev=sales.reduce((a,b)=>a+b.price,0);
+ let cost=buys.reduce((a,b)=>a+b.price,0);
+ let prof=rev-cost;
+
+ let avg=prof/(sales.length||1);
+
+ kpi.innerHTML=`
+
+ <div class="kpi"><b>${rev}</b><br>Entrate</div>
+ <div class="kpi"><b>${cost}</b><br>Uscite</div>
+ <div class="kpi"><b>${prof}</b><br>Utile</div>
+ <div class="kpi"><b>${avg.toFixed(0)}</b><br>Media</div>
+ <div class="kpi"><b>${sales.length}</b><br>Vendite</div>
+
+ `;
+}
+
+/* CHARTS */
+
+function renderCharts(){
+
+ let m={};
+ let cash={};
+
+ sales.forEach(s=>{
+  let k=s.date?.slice(0,7);
+  if(k){
+   m[k]=(m[k]||0)+s.price;
+   cash[k]=(cash[k]||0)+(s.price-s.cost);
+  }
+ });
+
+ draw(chartRevenue,"line","Ricavi",m);
+ draw(chartCash,"bar","Cashflow",cash);
+
+ // ROI
+ let roi=sales.map(s=>((s.price-s.cost)/s.cost*100)||0);
+
+ draw(chartROI,"bar","ROI %",objFrom(sales.map(x=>x.name),roi));
+
+ // Category
+ let cat={};
+
+ sales.forEach(s=>{
+  cat[s.cat]=(cat[s.cat]||0)+s.price;
+ });
+
+ draw(chartCategory,"pie","Categorie",cat);
+
+ // Profit
+ let prof=sales.map(s=>s.price-s.cost);
+
+ draw(chartProfit,"line","Profitto",objFrom(sales.map(x=>x.name),prof));
+}
+
+function draw(ref,type,label,obj){
+
+ if(ref) ref.destroy();
+
+ let ctx=document.getElementById(label.includes("Ricavi")?"chartRevenue":
+ label.includes("Cash")?"chartCash":
+ label.includes("ROI")?"chartROI":
+ label.includes("Categorie")?"chartCategory":"chartProfit");
+
+ ref=new Chart(ctx,{
+  type,
+  data:{
+   labels:Object.keys(obj),
+   datasets:[{
+    label,
+    data:Object.values(obj),
+    backgroundColor:"#d4af37",
+    borderColor:"#d4af37"
+   }]
+  }
+ });
+}
+
+function objFrom(k,v){
+ let o={};
+ k.forEach((x,i)=>o[x]=v[i]);
+ return o;
+}
+
+/* FORECAST */
+
+function makeForecast(){
+
+ let avg=sales.reduce((a,b)=>a+b.price,0)/(sales.length||1);
+
+ let trend=avg*1.18;
+
+ forecastRes.innerHTML=`
+ Prossimo mese: <b>${trend.toFixed(0)}€</b><br>
+ Crescita stimata: +18%
+ `;
+}
+
+/* SEARCH */
+
+function searchItem(){
+
+ let t=searchTxt.value.toLowerCase();
+
+ let r=sales.filter(s=>s.name.toLowerCase().includes(t));
+
+ let h="<ul>";
+
+ r.forEach(x=>h+=`<li>${x.name} — ${x.price}€</li>`);
+
+ h+="</ul>";
+
+ searchRes.innerHTML=h;
+}
+
+/* GOOGLE LENS */
+
+function lens(){
+
+ let f=imgFile.files[0];
+
+ if(!f) return alert("Carica un'immagine");
+
+ let url="https://lens.google.com/upload";
+
+ window.open(url,"_blank");
+}
+
+/* IMPORT */
+
+function importFile(){
+
+ let file=fileInput.files[0];
+
+ if(!file) return alert("Seleziona CSV");
+
+ Papa.parse(file,{
+  header:true,
+  skipEmptyLines:true,
+  complete:r=>{
+
+   let c=0;
+
+   r.data.forEach(x=>{
+
+    let n=x.nome||x.Nome||x.prodotto||x.articolo;
+    let p=x.prezzo||x.importo||x.totale;
+    let co=x.costo||0;
+    let d=x.data||"";
+
+    if(n&&p){
+
+     sales.push({
+      name:n,
+      cat:"Import",
+      price:+p,
+      cost:+co,
+      date:d
+     });
+
+     c++;
+    }
+   });
+
+   save();
+   render();
+
+   importRes.innerHTML=`✔️ ${c} record importati`;
+  }
+ });
+}
+
+/* AI */
+
+function renderAI(){
+
+ let rev=sales.reduce((a,b)=>a+b.price,0);
+ let cost=buys.reduce((a,b)=>a+b.price,0);
+
+ let t="Sistema attivo.";
+
+ if(cost>rev) t="⚠️ Costi troppo alti.";
+ if(rev>cost) t="✅ Crescita positiva.";
+
+ chat.innerHTML=`<div class="ai">${t}</div>`;
+}
+
+function ask(){
+
+ let v=q.value;
+
+ chat.innerHTML+=`<div class="user">${v}</div>`;
+
+ let r="Consiglio: investi su pezzi rari.";
+
+ if(v.includes("perdo")) r="Riduci acquisti costosi.";
+ if(v.includes("invest")) r="Compra arte certificata.";
+
+ setTimeout(()=>{
+  chat.innerHTML+=`<div class="ai">${r}</div>`;
+  chat.scrollTop=chat.scrollHeight;
+ },300);
+
+ q.value="";
+}
+
+/* BACKUP */
+
+function exportData(){
+
+ let data={sales,buys};
+
+ let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+
+ let a=document.createElement("a");
+
+ a.href=URL.createObjectURL(blob);
+ a.download="backup_ultra.json";
+ a.click();
+}
+
+/* INIT */
+
+render();
 
 </script>
 
