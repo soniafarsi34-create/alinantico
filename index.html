@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 
-<title>alinantico</title>
+<title>alinantico Analytics</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -12,30 +12,30 @@
 
 body{
   font-family: Arial;
-  background:#f3f3f3;
+  background:#f4f4f4;
   padding:20px;
 }
 
-h1{
-  text-align:center;
-}
+h1{text-align:center;}
 
 .box{
   background:white;
   padding:20px;
   margin:15px 0;
   border-radius:10px;
-  box-shadow:0 0 5px #ccc;
 }
 
-.stats{
-  display:flex;
-  justify-content:space-around;
+select,input{
+  padding:6px;
+  margin:5px;
 }
 
-.stat{
-  font-size:22px;
-  font-weight:bold;
+button{
+  padding:8px 15px;
+  background:#333;
+  color:white;
+  border:none;
+  border-radius:5px;
 }
 
 </style>
@@ -43,53 +43,44 @@ h1{
 
 <body>
 
-<h1>📊 alinantico</h1>
+<h1>📊 alinantico Analytics</h1>
 
 <div class="box">
+
 <input type="file" id="fileInput">
-</div>
 
-<div class="box stats">
+<br><br>
 
-<div>
-Totale<br>
-<span id="totale" class="stat">0 €</span>
-</div>
+<label>X (Categoria):</label>
+<select id="xSelect"></select>
 
-<div>
-Media<br>
-<span id="media" class="stat">0 €</span>
-</div>
+<label>Y (Valore):</label>
+<select id="ySelect"></select>
 
-<div>
-Vendite<br>
-<span id="numero" class="stat">0</span>
-</div>
+<label>Grafico:</label>
+<select id="typeSelect">
+  <option value="bar">Barre</option>
+  <option value="line">Linea</option>
+  <option value="pie">Torta</option>
+  <option value="doughnut">Ciambella</option>
+</select>
 
-</div>
+<button onclick="genera()">Genera</button>
 
-<div class="box">
-<h3>Canali di vendita</h3>
-<canvas id="canali"></canvas>
 </div>
 
 <div class="box">
-<h3>Tipologie</h3>
-<canvas id="tipi"></canvas>
-</div>
-
-<div class="box">
-<h3>Vendite mensili</h3>
-<canvas id="mesi"></canvas>
+<canvas id="grafico"></canvas>
 </div>
 
 <script>
 
-let g1,g2,g3;
+let dati=[];
+let chart=null;
 
-document.getElementById("fileInput").addEventListener("change",caricaFile);
+document.getElementById("fileInput").addEventListener("change",loadFile);
 
-function caricaFile(e){
+function loadFile(e){
 
 const file=e.target.files[0];
 const reader=new FileReader();
@@ -99,66 +90,78 @@ reader.onload=function(x){
 const data=new Uint8Array(x.target.result);
 const wb=XLSX.read(data,{type:"array"});
 const sh=wb.Sheets[wb.SheetNames[0]];
-const json=XLSX.utils.sheet_to_json(sh);
+dati=XLSX.utils.sheet_to_json(sh);
 
-analizza(json);
+preparaSelect();
 
 };
 
 reader.readAsArrayBuffer(file);
 }
 
-function analizza(dati){
+function preparaSelect(){
 
-let totale=0;
-let count=0;
+const cols=Object.keys(dati[0]);
 
-let canali={};
-let tipi={};
-let mesi={};
+let x=document.getElementById("xSelect");
+let y=document.getElementById("ySelect");
+
+x.innerHTML="";
+y.innerHTML="";
+
+cols.forEach(c=>{
+
+let o1=document.createElement("option");
+o1.value=c;
+o1.text=c;
+
+let o2=o1.cloneNode(true);
+
+x.appendChild(o1);
+y.appendChild(o2);
+
+});
+}
+
+function genera(){
+
+let xCol=xSelect.value;
+let yCol=ySelect.value;
+let tipo=typeSelect.value;
+
+let map={};
 
 dati.forEach(r=>{
 
-let prezzo=Number(r["prezzo di vendita"]);
-if(!prezzo)return;
+let k=r[xCol];
+let v=Number(r[yCol]);
 
-totale+=prezzo;
-count++;
+if(!k || !v)return;
 
-let c=r["luogo di vendita"];
-let t=r["TIPOLOGIA"];
-let m=r["Mese di vendita"];
-
-if(c)canali[c]=(canali[c]||0)+prezzo;
-if(t)tipi[t]=(tipi[t]||0)+prezzo;
-if(m)mesi[m]=(mesi[m]||0)+prezzo;
+map[k]=(map[k]||0)+v;
 
 });
 
-document.getElementById("totale").innerText=totale.toFixed(2)+" €";
-document.getElementById("media").innerText=(totale/count).toFixed(2)+" €";
-document.getElementById("numero").innerText=count;
+let labels=Object.keys(map);
+let values=Object.values(map);
 
-creaGrafico("canali",canali,"bar",g1);
-creaGrafico("tipi",tipi,"pie",g2);
-creaGrafico("mesi",mesi,"line",g3);
+if(chart)chart.destroy();
 
-}
-
-function creaGrafico(id,data,tipo,old){
-
-if(old)old.destroy();
-
-return new Chart(
-document.getElementById(id),
+chart=new Chart(
+document.getElementById("grafico"),
 {
 type:tipo,
 data:{
-labels:Object.keys(data),
+labels:labels,
 datasets:[{
-data:Object.values(data)
+data:values,
+backgroundColor:[
+"#4CAF50","#2196F3","#FF9800",
+"#E91E63","#9C27B0","#00BCD4"
+]
 }]
-}
+},
+options:{responsive:true}
 });
 }
 
